@@ -1,0 +1,28 @@
+- name: Instalar dependencias
+  apt:
+    name:
+      - wget
+      - gdebi-core
+    state: present
+    update_cache: yes
+
+#- name: Descargar Checkmk Raw Edition
+  #get_url:
+    #url: https://download.checkmk.com/checkmk/2.3.0p5/check-mk-raw-2.3.0p5_0.bullseye_amd64.deb
+    #dest: /tmp/checkmk.deb
+
+- name: Instalar Checkmk desde .deb
+  apt:
+    deb: /tmp/checkmk.deb
+
+- name: Crear sitio "monitoring"
+  command: omd create monitoring
+  args:
+    creates: /opt/omd/sites/monitoring
+
+- name: Iniciar sitio Checkmk
+  command: omd start monitoring
+
+- name: Mostrar URL de acceso
+  debug:
+    msg: "Checkmk disponible en http://{{ inventory_hostname }}/monitoring"

@@ -1,0 +1,6 @@
+---
+- name: Configurar contenedores LXC con IPs fijas
+  hosts: localhost
+  become: true
+  roles:
+    - setup_lxc

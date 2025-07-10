@@ -1,0 +1,7 @@
+container_names:
+  - checkmk
+  - slurm
+  - samba
+
+inventory_file: inventories/dev/hosts
+ssh_key_path: "{{ lookup('env', 'HOME') }}/.ssh/id_rsa"

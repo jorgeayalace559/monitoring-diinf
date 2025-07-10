@@ -1,0 +1,5 @@
+- name: Limpiar entorno de contenedores LXC
+  hosts: localhost
+  become: true
+  roles:
+    - lxc_cleanup

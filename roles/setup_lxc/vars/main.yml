@@ -1,0 +1,13 @@
+container_network:
+  checkmk:
+    ip: 10.0.3.100
+  slurm:
+    ip: 10.0.3.101
+  samba:
+    ip: 10.0.3.102
+
+netmask: 255.255.255.0
+gateway: 10.0.3.1
+bridge: lxcbr0
+
+ubuntu_password: ubuntu

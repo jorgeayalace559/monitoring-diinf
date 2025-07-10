@@ -1,0 +1,17 @@
+- name: Detener contenedores si están corriendo
+  shell: lxc-stop -n {{ item }}
+  ignore_errors: true
+  loop: "{{ container_names }}"
+
+- name: Destruir contenedores
+  shell: lxc-destroy -n {{ item }}
+  ignore_errors: true
+  loop: "{{ container_names }}"
+
+
+- name: Eliminar archivos de configuración de contenedores
+  file:
+    path: "/var/lib/lxc/{{ item }}"
+    state: absent
+  loop: "{{ container_names }}"
+  become: true

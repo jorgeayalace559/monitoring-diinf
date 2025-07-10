@@ -6,10 +6,11 @@
     state: present
     update_cache: yes
 
-#- name: Descargar Checkmk Raw Edition
-  #get_url:
-    #url: https://download.checkmk.com/checkmk/2.3.0p5/check-mk-raw-2.3.0p5_0.bullseye_amd64.deb
-    #dest: /tmp/checkmk.deb
+- name: Copiar Checkmk .deb desde el rol
+  copy:
+    src: check-mk-raw-2.3.0p34_0.jammy_amd64.deb
+    dest: /tmp/checkmk.deb
+
 
 - name: Instalar Checkmk desde .deb
   apt:
@@ -19,9 +20,20 @@
   command: omd create monitoring
   args:
     creates: /opt/omd/sites/monitoring
+  register: omd_create_output
+
+- name: Mostrar salida de creación del sitio
+  debug:
+    var: omd_create_output.stdout_lines
 
 - name: Iniciar sitio Checkmk
   command: omd start monitoring
+  register: omd_start_output
+
+- name: Mostrar salida de inicio del sitio
+  debug:
+    var: omd_start_output.stdout_lines
+
 
 - name: Mostrar URL de acceso
   debug:

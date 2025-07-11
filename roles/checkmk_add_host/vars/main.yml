@@ -1,0 +1,4 @@
+checkmk_site: monitoring
+checkmk_host_ip: 10.0.3.102
+checkmk_host_name: samba
+checkmk_server_container: checkmk

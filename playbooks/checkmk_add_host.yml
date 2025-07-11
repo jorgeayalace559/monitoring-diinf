@@ -1,0 +1,5 @@
+- name: Agregar host Samba a Checkmk
+  hosts: localhost
+  become: true
+  roles:
+    - checkmk_add_host

@@ -1,0 +1,80 @@
+---
+- name: Instalar Samba, expect y dependencias
+  apt:
+    name:
+      - samba
+      - expect
+      - python3-pexpect
+    state: present
+    update_cache: true
+
+- name: Crear usuario de sistema para Samba
+  user:
+    name: "{{ samba_user }}"
+    shell: /usr/sbin/nologin
+    create_home: no
+    state: present
+
+- name: Crear carpeta compartida
+  file:
+    path: "{{ samba_share_path }}"
+    state: directory
+    owner: "{{ samba_user }}"
+    group: "{{ samba_user }}"
+    mode: '0775'
+
+- name: Verificar si el usuario Samba ya está registrado
+  command: pdbedit -L -u {{ samba_user }}
+  register: samba_user_check
+  failed_when: false
+  changed_when: false
+
+- name: Crear usuario Samba con expect si no existe
+  expect:
+    command: smbpasswd -a {{ samba_user }}
+    responses:
+      (?i)new SMB password: "{{ samba_password }}"
+      (?i)Retype new SMB password: "{{ samba_password }}"
+    timeout: 5
+  when: samba_user_check.rc != 0
+  no_log: false  # Puedes volver a true luego de confirmar que funciona
+
+
+- name: Eliminar usuario Samba si quedó en estado corrupto (opcional)
+  command: smbpasswd -x {{ samba_user }}
+  when: samba_user_check.rc != 0
+  ignore_errors: true
+
+- name: Crear usuario Samba con expect si no existe
+  expect:
+    command: smbpasswd -a {{ samba_user }}
+    responses:
+      (?i)new SMB password: "{{ samba_password }}"
+      (?i)Retype new SMB password: "{{ samba_password }}"
+    timeout: 5
+  when: samba_user_check.rc != 0
+  no_log: true
+
+- name: Configurar smb.conf
+  template:
+    src: smb.conf.j2
+    dest: /etc/samba/smb.conf
+    mode: '0644'
+
+- name: Reiniciar Samba
+  service:
+    name: smbd
+    state: restarted
+    enabled: yes
+
+# 👇 Agente Checkmk
+
+- name: Copiar agente Checkmk al contenedor
+  copy:
+    src: check-mk-agent_2.3.0p34-1_all.deb
+    dest: /tmp/checkmk-agent.deb
+
+- name: Instalar agente Checkmk
+  apt:
+    deb: /tmp/checkmk-agent.deb
+    state: present

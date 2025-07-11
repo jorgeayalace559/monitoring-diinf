@@ -1,0 +1,4 @@
+samba_user: sambauser
+samba_password: samba123
+samba_share_path: /srv/samba/compartido
+samba_share_name: compartido

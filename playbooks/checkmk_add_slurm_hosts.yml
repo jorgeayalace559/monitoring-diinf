@@ -1,0 +1,6 @@
+---
+- name: Agregar nodos Slurm a Checkmk
+  hosts: localhost
+  gather_facts: false
+  roles:
+    - checkmk_add_slurm_hosts

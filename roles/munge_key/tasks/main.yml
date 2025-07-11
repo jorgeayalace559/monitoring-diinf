@@ -1,0 +1,19 @@
+- name: Verificar si la clave munge ya existe en el controlador
+  stat:
+    path: /etc/munge/munge.key
+  delegate_to: "{{ groups['slurm_controller'][0] }}"
+  run_once: true
+  register: munge_key_status
+
+- name: Instalar paquete munge en el controlador
+  apt:
+    name: munge
+    state: present
+    update_cache: true
+  when: inventory_hostname == groups['slurm_controller'][0]
+
+- name: Generar nueva clave munge si no existe
+  command: /usr/sbin/mungekey
+  when:
+    - inventory_hostname == groups['slurm_controller'][0]
+    - not munge_key_status.stat.exists

@@ -1,0 +1,79 @@
+---
+- name: Verificar si los contenedores existen
+  command: lxc-info -n {{ item.key }}
+  register: lxc_check
+  failed_when: false
+  changed_when: false
+  loop: "{{ container_network | dict2items }}"
+
+- name: Crear contenedores si no existen
+  command: lxc-create -n {{ item.key }} -t download -- --dist ubuntu --release jammy --arch amd64
+  when: item.key not in lxc_check.results | selectattr('rc', 'eq', 0) | map(attribute='item.key') | list | difference([item.key])
+  loop: "{{ container_network | dict2items }}"
+
+- name: Configurar red estática
+  copy:
+    dest: "/var/lib/lxc/{{ item.key }}/rootfs/etc/netplan/50-cloud-init.yaml"
+    content: |
+      network:
+        version: 2
+        ethernets:
+          eth0:
+            dhcp4: no
+            addresses:
+              - {{ item.value.ip }}/24
+            gateway4: 10.0.3.1
+            nameservers:
+              addresses: [8.8.8.8, 1.1.1.1]
+  loop: "{{ container_network | dict2items }}"
+
+- name: Iniciar contenedores
+  command: lxc-start -n {{ item.key }} -d
+  loop: "{{ container_network | dict2items }}"
+
+- name: Establecer contraseña para usuario ubuntu
+  shell: |
+    lxc-attach -n {{ item.key }} -- bash -c "echo 'ubuntu:ubuntu' | chpasswd"
+  loop: "{{ container_network | dict2items }}"
+
+- name: Instalar openssh-server en los contenedores
+  shell: |
+    lxc-attach -n {{ item.key }} -- bash -c "apt update && apt install -y openssh-server"
+  loop: "{{ container_network | dict2items }}"
+
+- name: Establecer contraseña para el usuario ubuntu
+  shell: |
+    lxc-attach -n {{ item.key }} -- bash -c "echo 'ubuntu:{{ ubuntu_password }}' | chpasswd"
+  loop: "{{ container_network | dict2items }}"
+
+- name: Validar si existe la clave SSH pública
+  stat:
+    path: "{{ lookup('env', 'HOME') }}/.ssh/id_rsa.pub"
+  register: ssh_key
+
+- name: Generar clave SSH si no existe
+  command: ssh-keygen -t rsa -b 4096 -f "{{ lookup('env', 'HOME') }}/.ssh/id_rsa" -N ""
+  when: not ssh_key.stat.exists
+
+- name: Eliminar clave anterior del usuario normal
+  shell: ssh-keygen -f "{{ lookup('env', 'HOME') }}/.ssh/known_hosts" -R {{ item.value.ip }}
+  delegate_to: localhost
+  ignore_errors: true
+  loop: "{{ container_network | dict2items }}"
+
+- name: Leer la clave pública local
+  slurp:
+    src: "{{ lookup('env', 'HOME') }}/.ssh/id_rsa.pub"
+  register: ssh_pubkey
+  delegate_to: localhost
+  become: false
+
+- name: Crear directorio .ssh en contenedor si no existe
+  shell: |
+    lxc-attach -n {{ item.key }} -- bash -c "mkdir -p /home/ubuntu/.ssh && chown ubuntu:ubuntu /home/ubuntu/.ssh && chmod 700 /home/ubuntu/.ssh"
+  loop: "{{ container_network | dict2items }}"
+
+- name: Copiar clave pública al contenedor (authorized_keys)
+  shell: |
+    echo '{{ ssh_pubkey.content | b64decode }}' | lxc-attach -n {{ item.key }} -- bash -c "cat >> /home/ubuntu/.ssh/authorized_keys && chown ubuntu:ubuntu /home/ubuntu/.ssh/authorized_keys && chmod 600 /home/ubuntu/.ssh/authorized_keys"
+  loop: "{{ container_network | dict2items }}"

@@ -1,0 +1,19 @@
+---
+- name: Preparar nodos LXC para Slurm
+  hosts: localhost
+  become: true
+  gather_facts: false
+  roles:
+    - setup_slurm_lxc
+
+- name: Distribuir clave Munge
+  hosts: slurm_controller:slurm_nodes
+  become: true
+  roles:
+    - munge_key
+
+- name: Configurar clúster Slurm
+  hosts: slurm_controller:slurm_nodes
+  become: true
+  roles:
+    - slurm_cluster

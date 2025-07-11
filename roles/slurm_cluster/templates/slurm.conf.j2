@@ -1,0 +1,22 @@
+ClusterName=cluster_diinf
+SlurmctldHost=slurm-ctrl
+SlurmUser=slurm
+StateSaveLocation=/var/spool/slurm-llnl
+SlurmdSpoolDir=/var/spool/slurmd
+SwitchType=switch/none
+MpiDefault=none
+SlurmctldPort=6817
+SlurmdPort=6818
+ProctrackType=proctrack/linuxproc
+ReturnToService=2
+SlurmctldTimeout=120
+SlurmdTimeout=300
+SchedulerType=sched/backfill
+SelectType=select/cons_res
+SelectTypeParameters=CR_Core
+
+{% for host in groups['slurm_nodes'] %}
+NodeName={{ host }} CPUs=2 State=UNKNOWN
+{% endfor %}
+
+PartitionName=debug Nodes=ALL Default=YES MaxTime=INFINITE State=UP

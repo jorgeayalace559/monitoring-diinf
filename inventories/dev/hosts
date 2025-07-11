@@ -6,3 +6,13 @@
 
 [samba]
 10.0.3.102 ansible_user=ubuntu
+
+[slurm_controller]
+10.0.3.110 ansible_user=ubuntu
+
+[slurm_nodes]
+10.0.3.111 ansible_user=ubuntu
+10.0.3.112 ansible_user=ubuntu
+
+[all:vars]
+ansible_python_interpreter=/usr/bin/python3

@@ -61,3 +61,10 @@
 - name: Instalar paquete Checkmk
   apt:
     deb: /tmp/checkmk-agent.deb
+
+- name: Copiar script de extracción de métricas Slurm
+  copy:
+    src: check_slurm_jobs.sh
+    dest: /usr/lib/check_mk_agent/local/10-slurm_jobs
+    mode: '0755'
+

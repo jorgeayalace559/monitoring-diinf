@@ -78,3 +78,10 @@
   apt:
     deb: /tmp/checkmk-agent.deb
     state: present
+
+- name: Copiar script de extracción de métricas Samba
+  copy:
+    src: check_samba_sessions.sh
+    dest: /usr/lib/check_mk_agent/local/10-samba_sessions
+    mode: '0755'
+

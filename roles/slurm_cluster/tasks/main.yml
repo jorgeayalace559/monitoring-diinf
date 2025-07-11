@@ -62,9 +62,10 @@
   apt:
     deb: /tmp/checkmk-agent.deb
 
-- name: Copiar script de extracción de métricas Slurm
+- name: Copiar todos los scripts .sh al directorio local del agente Checkmk
   copy:
-    src: check_slurm_jobs.sh
-    dest: /usr/lib/check_mk_agent/local/10-slurm_jobs
+    src: "{{ item }}"
+    dest: "/usr/lib/check_mk_agent/local/{{ item | basename }}"
     mode: '0755'
-
+  with_fileglob:
+    - "*.sh"

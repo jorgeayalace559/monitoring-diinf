@@ -1,7 +1,7 @@
 ---
-- name: Crear carpeta y archivo hosts.mk en el contenedor Checkmk si no existen
+- name: Crear carpeta y archivo hosts.mk en el contenedor Checkmk si no existen1
   shell: |
-    sudo lxc-attach -n {{ checkmk_container }} -- bash -c "
+    lxc-attach -n {{ checkmk_container }} -- bash -c "
       mkdir -p /omd/sites/{{ checkmk_site }}/etc/check_mk/conf.d/wato &&
       touch /omd/sites/{{ checkmk_site }}/etc/check_mk/conf.d/wato/hosts.mk
     "
@@ -10,7 +10,7 @@
 
 - name: Asegurarse de que el host slurm-ctrl esté definido por nombre y IP
   shell: |
-    sudo lxc-attach -n {{ checkmk_container }} -- bash -c '
+    lxc-attach -n {{ checkmk_container }} -- bash -c '
       echo "all_hosts += [\"slurm-ctrl|lan|tcp\"]" >> /omd/sites/{{ checkmk_site }}/etc/check_mk/conf.d/wato/hosts.mk &&
       echo "ipaddresses.update({\"slurm-ctrl\": \"10.0.3.110\"})" >> /omd/sites/{{ checkmk_site }}/etc/check_mk/conf.d/wato/hosts.mk
     '
@@ -23,7 +23,7 @@
     checkmk_host_name: "{{ item.name }}"
     checkmk_host_ip: "{{ item.ip }}"
   shell: |
-    sudo lxc-attach -n {{ checkmk_container }} -- bash -c '
+    lxc-attach -n {{ checkmk_container }} -- bash -c '
       sed -i "/{{ checkmk_host_name }}/d" /omd/sites/{{ checkmk_site }}/etc/check_mk/conf.d/wato/hosts.mk
       echo "all_hosts += [\"{{ checkmk_host_name }}|lan|tcp\"]" >> /omd/sites/{{ checkmk_site }}/etc/check_mk/conf.d/wato/hosts.mk
       echo "ipaddresses.update({\"{{ checkmk_host_name }}\": \"{{ checkmk_host_ip }}\"})" >> /omd/sites/{{ checkmk_site }}/etc/check_mk/conf.d/wato/hosts.mk
@@ -35,7 +35,7 @@
 - name: Ejecutar cmk -Iv sobre cada host Slurm
   loop: "{{ slurm_hosts | map(attribute='name') | list }}"
   shell: |
-    sudo lxc-attach -n {{ checkmk_container }} -- su - {{ checkmk_site }} -c "cmk -Iv {{ item }}"
+    lxc-attach -n {{ checkmk_container }} -- su - {{ checkmk_site }} -c "cmk -Iv {{ item }}"
   register: cmk_discovery
   changed_when: false
 
@@ -45,6 +45,6 @@
 
 - name: Activar cambios en Checkmk
   shell: |
-    sudo lxc-attach -n {{ checkmk_container }} -- su - {{ checkmk_site }} -c "cmk -R"
+    lxc-attach -n {{ checkmk_container }} -- su - {{ checkmk_site }} -c "cmk -R"
   delegate_to: localhost
   become: true

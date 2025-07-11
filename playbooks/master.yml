@@ -1,0 +1,50 @@
+---
+- name: Configurar contenedores LXC con IPs fijas
+  hosts: localhost
+  become: true
+  roles:
+    - setup_lxc
+
+- name: Crear servidor checkmk
+  hosts: checkmk
+  become: yes
+  roles:
+    - checkmk_server
+
+- name: Configurar servidor Samba
+  hosts: samba
+  become: true
+  roles:
+    - samba_server
+
+- name: Agregar host Samba a Checkmk
+  hosts: localhost
+  become: true
+  roles:
+    - checkmk_add_host
+
+- name: Preparar nodos LXC para Slurm
+  hosts: localhost
+  become: true
+  gather_facts: false
+  roles:
+    - setup_slurm_lxc
+
+- name: Distribuir clave Munge
+  hosts: slurm_controller:slurm_nodes
+  become: true
+  roles:
+    - munge_key
+
+- name: Configurar cluster Slurm
+  hosts: all_slurm_nodes
+  become: true
+  roles:
+    - slurm_cluster
+
+- name: Agregar nodos Slurm a Checkmk
+  hosts: localhost
+  become: true
+  gather_facts: false
+  roles:
+    - checkmk_add_slurm_hosts

@@ -79,9 +79,11 @@
     deb: /tmp/checkmk-agent.deb
     state: present
 
-- name: Copiar script de extracción de métricas Samba
+- name: Copiar todos los scripts .sh al directorio local del agente Checkmk
   copy:
-    src: check_samba_sessions.sh
-    dest: /usr/lib/check_mk_agent/local/10-samba_sessions
+    src: "{{ item }}"
+    dest: "/usr/lib/check_mk_agent/local/{{ item | basename }}"
     mode: '0755'
+  with_fileglob:
+    - "*.sh"
 

@@ -15,7 +15,7 @@ SchedulerType=sched/backfill
 SelectType=select/cons_res
 SelectTypeParameters=CR_Core
 
-{% for host in groups['slurm_nodes'] %}
+{% for host in groups['all_slurm_nodes'] %}
 NodeName={{ host }} CPUs=2 State=UNKNOWN
 {% endfor %}
 

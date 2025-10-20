@@ -39,13 +39,7 @@ cd monitoring-diinf
 3. Ejecuta el setup de LXC:
 
 ```bash
-ansible-playbook -i localhost, -c local playbooks/setup_lxc.yml
-```
-
-4. Ejecuta la instalación de Checkmk:
-
-```bash
-ansible-playbook -i inventories/dev/hosts playbooks/checkmk.yml
+ansible-playbook -i inventories/dev/hosts playbooks/master.yml
 ```
 
 ---

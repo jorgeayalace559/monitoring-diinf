@@ -1,0 +1,9 @@
+---
+# Configuración base para agregar UPS a Checkmk dentro de contenedor LXC
+
+checkmk_server_container: checkmk
+checkmk_site: monitoring
+
+checkmk_host_name: "UPS"
+checkmk_host_ip: 10.0.3.103
+checkmk_tags: "lan|snmp"

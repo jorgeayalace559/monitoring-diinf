@@ -1,0 +1,132 @@
+# =============================
+# 1) SNMPSim en virtualenv
+# =============================
+- name: Asegurar dependencias base
+  apt:
+    name:
+      - python3
+      - python3-venv
+      - python3-pip
+    state: present
+    update_cache: yes
+  become: yes
+
+- name: Crear usuario/grupo de servicio snmpsim
+  become: yes
+  block:
+    - group:
+        name: snmpsim
+        system: yes
+        state: present
+    - user:
+        name: snmpsim
+        group: snmpsim
+        system: yes
+        create_home: no
+        state: present
+
+- name: Crear directorios para SNMPSim (venv, data, logs)
+  become: yes
+  block:
+    - file:
+        path: /opt/snmpsim
+        state: directory
+        owner: snmpsim
+        group: snmpsim
+        mode: '0755'
+    - file:
+        path: "{{ snmpsim_data_dir }}"
+        state: directory
+        owner: snmpsim
+        group: snmpsim
+        mode: '0755'
+    - file:
+        path: "{{ snmpsim_log_file }}"
+        state: touch
+        owner: snmpsim
+        group: snmpsim
+        mode: '0644'
+
+- name: Crear virtualenv para SNMPSim
+  command: python3 -m venv /opt/snmpsim/venv
+  args:
+    creates: /opt/snmpsim/venv/bin/python
+  become: yes
+
+# Versiones compatibles para evitar problemas de imports (pyasn1.compat.octets) y CLI
+- name: Instalar SNMPSim y dependencias compatibles en el venv
+  pip:
+    name:
+      - "pyasn1==0.4.8"
+      - "pysnmp==4.4.12"
+      - "snmpsim==0.4.7"
+    virtualenv: /opt/snmpsim/venv
+    virtualenv_command: /usr/bin/python3 -m venv
+  become: yes
+
+- name: Copiar archivo .snmprec (datos de la UPS)
+  copy:
+    src: "{{ snmpsim_data_file }}"
+    dest: "{{ snmpsim_data_dir }}/{{ snmpsim_data_file }}"
+    owner: snmpsim
+    group: snmpsim
+    mode: '0644'
+  become: yes
+  notify: Reiniciar SNMPSim
+
+# Nota: el ejecutable del venv es snmpsimd.py (o snmpsimd). Apuntamos a ese binario.
+- name: Crear servicio systemd para SNMPSim (no root, puerto >1024)
+  copy:
+    dest: /etc/systemd/system/snmpsim.service
+    content: |
+      [Unit]
+      Description=SNMP Simulator - UPS Emulada
+      After=network.target
+
+      [Service]
+      User=snmpsim
+      Group=snmpsim
+      WorkingDirectory=/opt/snmpsim
+      ExecStart=/opt/snmpsim/venv/bin/snmpsimd.py \
+        --data-dir={{ snmpsim_data_dir }} \
+        --agent-udpv4-endpoint={{ snmpsim_host }}:{{ snmpsim_port }} \
+        --logging-method=file:{{ snmpsim_log_file }}
+      Restart=always
+
+      [Install]
+      WantedBy=multi-user.target
+  become: yes
+
+- name: Recargar systemd y habilitar servicio SNMPSim
+  systemd:
+    daemon_reload: yes
+    name: snmpsim
+    state: started
+    enabled: yes
+  become: yes
+
+
+# -----------------------------------------
+# 👇 2️⃣ Instalación del agente Checkmk
+# -----------------------------------------
+- name: Copiar agente Checkmk al contenedor
+  copy:
+    src: "{{ checkmk_agent_package }}"
+    dest: "{{ checkmk_agent_dest }}"
+    mode: '0644'
+  become: yes
+
+- name: Instalar agente Checkmk
+  apt:
+    deb: "{{ checkmk_agent_dest }}"
+    state: present
+  become: yes
+
+- name: Verificar instalación del agente Checkmk
+  command: check_mk_agent
+  register: checkmk_agent_output
+  ignore_errors: yes
+
+- name: Mostrar primeras líneas de salida del agente Checkmk
+  debug:
+    msg: "{{ checkmk_agent_output.stdout_lines[:10] | default(['Agente no responde o no instalado']) }}"

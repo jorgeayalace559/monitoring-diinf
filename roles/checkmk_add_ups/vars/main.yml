@@ -1,0 +1,4 @@
+checkmk_site: monitoring
+checkmk_host_ip: 10.0.3.103
+checkmk_host_name: ups
+checkmk_server_container: checkmk

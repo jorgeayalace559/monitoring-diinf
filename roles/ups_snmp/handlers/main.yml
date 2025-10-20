@@ -1,0 +1,6 @@
+---
+- name: Reiniciar SNMPSim
+  systemd:
+    name: snmpsim
+    state: restarted
+  become: yes

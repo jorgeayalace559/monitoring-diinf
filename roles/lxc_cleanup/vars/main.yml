@@ -2,6 +2,7 @@ container_names:
   - checkmk
   - slurm
   - samba
+  - ups
   - slurm-ctrl
   - slurm-node1
   - slurm-node2

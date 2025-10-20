@@ -5,6 +5,8 @@ container_network:
     ip: 10.0.3.101
   samba:
     ip: 10.0.3.102
+  ups:
+    ip: 10.0.3.103
 
 netmask: 255.255.255.0
 gateway: 10.0.3.1

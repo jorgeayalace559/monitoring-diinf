@@ -1,0 +1,16 @@
+---
+# Variables por defecto del rol simulacion_ups
+
+snmpsim_version: latest
+snmpsim_data_dir: "/opt/snmpsim/data"
+snmpsim_port: 1161
+snmpsim_host: "0.0.0.0"
+snmpsim_data_file: "apc-8932.snmprec"
+snmpsim_log_file: "/var/log/snmpsim.log"
+snmpsim_user: snmpsim
+
+checkmk_agent_package: "check-mk-agent_2.3.0p34-1_all.deb"
+checkmk_agent_dest: "/tmp/checkmk-agent.deb"
+
+
+

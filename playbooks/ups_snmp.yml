@@ -1,0 +1,12 @@
+- name: Configurar ups simulada
+  hosts: ups
+  become: true
+  roles:
+    - ups_snmp
+
+- name: Agregar nodo ups a Checkmk
+  hosts: localhost
+  become: true
+  gather_facts: false
+  roles:
+    - checkmk_add_ups

@@ -1,0 +1,26 @@
+---
+- name: Probar UPS emulada con SNMPSim
+  hosts: ups
+  become: yes
+  gather_facts: false
+
+  vars:
+    snmp_host: 10.0.3.103
+    snmp_port: 1161
+    snmp_community: "public"
+
+  tasks:
+    - name: Instalar cliente snmp para pruebas
+      apt:
+        name: snmp
+        state: present
+        update_cache: yes
+
+    - name: Obtener datos SNMP de la UPS simulada
+      command: snmpwalk -v2c -c {{ snmp_community }} {{ snmp_host }}:{{ snmp_port }}
+      register: snmp_output
+      ignore_errors: yes
+
+    - name: Mostrar los datos emulados
+      debug:
+        msg: "{{ snmp_output.stdout_lines }}"

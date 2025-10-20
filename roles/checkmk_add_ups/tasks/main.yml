@@ -1,0 +1,31 @@
+- name: Crear carpeta y archivo hosts.mk en el contenedor Checkmk si no existen
+  shell: |
+    lxc-attach -n {{ checkmk_server_container }} -- bash -c "
+      mkdir -p /omd/sites/{{ checkmk_site }}/etc/check_mk/conf.d/wato &&
+      touch /omd/sites/{{ checkmk_site }}/etc/check_mk/conf.d/wato/hosts.mk
+    "
+  delegate_to: localhost
+  become: true
+
+- name: Asegurarse de que el host samba esté definido por nombre y IP
+  shell: |
+    lxc-attach -n {{ checkmk_server_container }} -- bash -c '
+      echo "all_hosts += [\"{{ checkmk_host_name }}|lan|tcp\"]" >> /omd/sites/{{ checkmk_site }}/etc/check_mk/conf.d/wato/hosts.mk &&
+      echo "ipaddresses.update({\"{{ checkmk_host_name }}\": \"{{ checkmk_host_ip }}\"})" >> /omd/sites/{{ checkmk_site }}/etc/check_mk/conf.d/wato/hosts.mk
+    '
+  delegate_to: localhost
+  become: true
+
+- name: Ejecutar cmk -Iv sobre el host por nombre
+  shell: |
+    lxc-attach -n {{ checkmk_server_container }} -- su - {{ checkmk_site }} -c "cmk -Iv {{ checkmk_host_name }}"
+  register: cmk_discovery
+  changed_when: "'Starting' in cmk_discovery.stdout"
+
+- name: Mostrar salida del descubrimiento cmk -Iv
+  debug:
+    msg: "{{ cmk_discovery.stdout_lines }}"
+
+- name: Activar cambios en Checkmk
+  shell: |
+    lxc-attach -n {{ checkmk_server_container }} -- su - {{ checkmk_site }} -c "cmk -R"

@@ -7,6 +7,9 @@
 [samba]
 {{ container_map['samba'].ip }} ansible_user=ubuntu
 
+[ups]
+{{ container_map['ups'].ip }} ansible_user=ubuntu
+
 [slurm_controller]
 slurm-ctrl ansible_host=10.0.3.110 ansible_user=ubuntu
 
